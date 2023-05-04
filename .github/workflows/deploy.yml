@@ -75,7 +75,7 @@ jobs:
           dot_env: ${{ secrets.DOT_ENV }}
           ecr_url: ${{ env.ECR_URL }}
           ghv_env: "ECR_IMAGE=${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env. IMAGE_NAME}}"
-          stack_destroy: true
+          # stack_destroy: true
 
           checkout: false
 
