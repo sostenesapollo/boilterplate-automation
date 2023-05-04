@@ -70,8 +70,8 @@ jobs:
           # domain_name: ${{ env.DOMAIN }}
           # sub_domain: ${{ env.IMAGE_NAME }}
           # create_sub_cert: true
-          aws_resource_identifier: '${{ env.IMAGE_NAME }}-gn'
-          tf_state_bucket: '${{ env.IMAGE_NAME }}-gn'
+          aws_resource_identifier: '${{ env.IMAGE_NAME }}-rabbit'
+          tf_state_bucket: '${{ env.IMAGE_NAME }}-rabbit'
           dot_env: ${{ secrets.DOT_ENV }}
           ecr_url: ${{ env.ECR_URL }}
           ghv_env: "ECR_IMAGE=${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env. IMAGE_NAME}}"
