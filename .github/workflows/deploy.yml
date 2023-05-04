@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_NAME: testings
+  # INSTANCE_TYPE: t2.micro
+  # DOMAIN: site.com
+  ECR_URL: 706901732480.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: repo-ecr-name
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  EC2-Deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ steps.deploy.outputs.vm_url }}
+    steps:
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build, push docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |-
+
+          # Log image name
+          echo ">>> Image name: $IMAGE_NAME"
+
+          # Log registry
+          echo ">>>>>>> ${{ steps.login-ecr.outputs.registry }}"
+
+          # Docker build
+          echo ">>>>>>> Building >>>> $REGISTRY/$REPOSITORY:$IMAGE_NAME"
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_NAME .
+
+          # List images
+          echo ">>>>> Docker Images " 
+          echo $(docker image ls)
+
+          # Docker push
+          echo ">>>>>>> Docker push >>>> $REGISTRY/$REPOSITORY:$IMAGE_NAME"
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_NAME
+
+      - name: Print IMAGE_NAME
+        run: echo "IMAGE_NAME = $IMAGE_NAME"
+
+      - id: deploy
+        name: Deploy
+        uses: sostenesapollo/github-actions-deploy-docker-to-ec2@feature/ecr
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID}}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_default_region: ${{ env.AWS_REGION }}
+          ec2_instance_type: ${{ env.INSTANCE_TYPE }}
+          # domain_name: ${{ env.DOMAIN }}
+          # sub_domain: ${{ env.IMAGE_NAME }}
+          # create_sub_cert: true
+          aws_resource_identifier: '${{ env.IMAGE_NAME }}-gn'
+          tf_state_bucket: '${{ env.IMAGE_NAME }}-gn'
+          dot_env: ${{ secrets.DOT_ENV }}
+          ecr_url: ${{ env.ECR_URL }}
+          ghv_env: "ECR_IMAGE=${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env. IMAGE_NAME}}"
+          # stack_destroy: true
+
+          checkout: false
+
+          app_port: 3000
